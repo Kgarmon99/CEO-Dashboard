@@ -23,13 +23,14 @@
             background-color: var(--dark-bg);
             color: #ffffff;
             font-family: 'Rajdhani', sans-serif;
-            height: 100vh;
+            min-height: 100vh;
             width: 100vw;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             background-image: 
                 radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 80%),
                 linear-gradient(rgba(34, 197, 94, 0.02) 1px, transparent 1px),
@@ -131,11 +132,19 @@
         }
 
         .grid-layout {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            grid-template-rows: repeat(10, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 20px;
             flex-grow: 1;
+        }
+
+        @media (min-width: 1024px) {
+            .grid-layout {
+                display: grid;
+                grid-template-columns: repeat(12, 1fr);
+                grid-template-rows: repeat(10, 1fr);
+            }
+            body { height: 100vh; overflow: hidden; }
         }
 
         .metric-title { color: var(--neon-green); font-size: 10px; letter-spacing: 1px; }
@@ -159,25 +168,25 @@
     <div class="scanline"></div>
 
     <!-- HUD TOP -->
-    <div class="flex justify-between items-start mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-start gap-6 md:gap-0 mb-8">
         <div>
-            <h1 class="mono text-3xl font-black tracking-tighter text-white flex items-center gap-3">
+            <h1 class="mono text-2xl md:text-3xl font-black tracking-tighter text-white flex flex-wrap items-center gap-3">
                 <span class="text-neon-green">ROADMAP</span>_ENGINE <span class="text-xs bg-neon-green text-black px-2 py-0.5 rounded">v5.0</span>
             </h1>
-            <div class="flex gap-6 mono text-[11px] text-gray-500 mt-2">
+            <div class="flex flex-wrap gap-4 md:gap-6 mono text-[11px] text-gray-500 mt-2">
                 <span>STATION: <span class="text-white">KG_COMMAND</span></span>
                 <span>STATUS: <span class="text-neon-green">ACTIVE_EXECUTION</span></span>
                 <span id="sync-time" class="text-gold">SYNC: --:--:--</span>
             </div>
         </div>
-        <div class="flex gap-10">
-            <div class="text-right">
+        <div class="flex flex-wrap gap-6 md:gap-10">
+            <div class="text-left md:text-right">
                 <div class="metric-title">GOAL ARR</div>
-                <div class="text-3xl font-bold text-white">$20.0M</div>
+                <div class="text-2xl md:text-3xl font-bold text-white">$20.0M</div>
             </div>
-            <div class="text-right border-l border-gray-800 pl-10">
+            <div class="text-left md:text-right border-l border-gray-800 pl-6 md:pl-10">
                 <div class="metric-title">GOAL STUDENTS</div>
-                <div class="text-3xl font-bold text-white">5.0M</div>
+                <div class="text-2xl md:text-3xl font-bold text-white">5.0M</div>
             </div>
         </div>
     </div>
