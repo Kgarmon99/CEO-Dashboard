@@ -196,8 +196,8 @@
         
         <!-- 1. VELOCITY GAUGES -->
         <div class="panel col-span-3 row-span-4">
-            <div class="header-label"><span>Growth Velocity</span></div>
-            <div class="p-6 space-y-8 h-full">
+            <div class="header-label"><span class="text-white font-bold">THE NON-NEGOTIABLES</span></div>
+            <div class="p-6 space-y-6 h-full">
                 <div>
                     <div class="flex justify-between text-[11px] mono">
                         <span class="text-gray-400 uppercase">Daily Students</span>
@@ -214,10 +214,17 @@
                 </div>
                 <div>
                     <div class="flex justify-between text-[11px] mono">
-                        <span class="text-gray-400 uppercase">Monthly Revenue</span>
-                        <span id="val-monthly" class="text-white">$0 / $2.0M</span>
+                        <span class="text-gray-400 uppercase">Monthly Rev (Base)</span>
+                        <span id="val-monthly-base" class="text-white">$0 / $450K</span>
                     </div>
-                    <div class="velocity-gauge"><div id="gauge-monthly" class="velocity-fill" style="width: 0%;"></div></div>
+                    <div class="velocity-gauge"><div id="gauge-monthly-base" class="velocity-fill" style="width: 0%;"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] mono">
+                        <span class="text-gray-400 uppercase">Monthly Rev (Stretch)</span>
+                        <span id="val-monthly-stretch" class="text-white">$0 / $2.0M</span>
+                    </div>
+                    <div class="velocity-gauge"><div id="gauge-monthly-stretch" class="velocity-fill" style="width: 0%;"></div></div>
                 </div>
             </div>
         </div>
@@ -335,10 +342,14 @@
             document.getElementById('sync-time').textContent = 'SYNC: ' + new Date(d.lastUpdated).toLocaleTimeString();
             document.getElementById('gauge-daily').style.width = Math.min(100, (d.current.velocityToday / d.goals.dailyVelocityGoal) * 100) + '%';
             document.getElementById('val-daily').textContent = `${d.current.velocityToday.toLocaleString()} / 1,000`;
-            document.getElementById('gauge-weekly').style.width = Math.min(100, (d.current.velocityToday * 7 / d.goals.weeklyVelocityGoal) * 100) + '%';
+            document.getElementById('gauge-weekly').style.width = Math.min(100, (d.current.velocityToday * 7 / 7000) * 100) + '%';
             document.getElementById('val-weekly').textContent = `${(d.current.velocityToday * 7).toLocaleString()} / 7,000`;
-            document.getElementById('gauge-monthly').style.width = Math.min(100, (d.current.rev / d.goals.monthlyRevGoal) * 100) + '%';
-            document.getElementById('val-monthly').textContent = `$${d.current.rev.toLocaleString()} / $2.0M`;
+            
+            document.getElementById('gauge-monthly-base').style.width = Math.min(100, (d.current.rev / 450000) * 100) + '%';
+            document.getElementById('val-monthly-base').textContent = `$${d.current.rev.toLocaleString()} / $450K`;
+            
+            document.getElementById('gauge-monthly-stretch').style.width = Math.min(100, (d.current.rev / 2000000) * 100) + '%';
+            document.getElementById('val-monthly-stretch').textContent = `$${d.current.rev.toLocaleString()} / $2.0M`;
             const prospectList = document.getElementById('prospect-list');
             prospectList.innerHTML = '';
             d.sales.prospects.slice(0, 10).forEach(p => {
