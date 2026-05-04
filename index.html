@@ -332,42 +332,102 @@
             </div>
         </div>
 
+
+        <!-- TERMINAL INPUT -->
+        <div class="panel col-span-12 mt-4" style="border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);">
+            <div class="header-label" style="color: var(--neon-blue); border-bottom-color: rgba(59, 130, 246, 0.2);"><span>COMMAND TERMINAL // MANUAL OVERRIDE</span></div>
+            <div class="p-4 flex gap-4">
+                <span class="text-neon-blue font-bold mono pt-2">root@kg_ceo:~#</span>
+                <input type="text" id="cmd-input" class="w-full bg-transparent border-b border-gray-700 text-white mono p-2 focus:outline-none focus:border-neon-blue" placeholder="Enter 'rev 15000' or 'students 1200' and press Enter" />
+            </div>
+            <div id="cmd-log" class="p-4 pt-0 mono text-xs text-gray-500 h-20 overflow-y-auto">
+                > System ready. Awaiting input.
+            </div>
+        </div>
+
     </div>
 
+    
     <script src="dashboard-data.js"></script>
     <script>
+        // Load local overrides
+        let localState = JSON.parse(localStorage.getItem('kg_ceo_state') || '{"rev": 0, "velocityToday": 0}');
+
+        function getD() {
+            if (typeof KG_DATA === 'undefined') return null;
+            const d = JSON.parse(JSON.stringify(KG_DATA)); // Clone
+            if (localState.rev) d.current.rev = localState.rev;
+            if (localState.velocityToday) d.current.velocityToday = localState.velocityToday;
+            return d;
+        }
+
         function updateHUD() {
-            if (typeof KG_DATA === 'undefined') return;
-            const d = KG_DATA;
-            document.getElementById('sync-time').textContent = 'SYNC: ' + new Date(d.lastUpdated).toLocaleTimeString();
-            document.getElementById('gauge-daily').style.width = Math.min(100, (d.current.velocityToday / d.goals.dailyVelocityGoal) * 100) + '%';
+            const d = getD();
+            if (!d) return;
+            document.getElementById('sync-time').textContent = 'SYNC: ' + new Date().toLocaleTimeString();
+            document.getElementById('gauge-daily').style.width = Math.min(100, (d.current.velocityToday / 1000) * 100) + '%';
             document.getElementById('val-daily').textContent = `${d.current.velocityToday.toLocaleString()} / 1,000`;
             document.getElementById('gauge-weekly').style.width = Math.min(100, (d.current.velocityToday * 7 / 7000) * 100) + '%';
             document.getElementById('val-weekly').textContent = `${(d.current.velocityToday * 7).toLocaleString()} / 7,000`;
             
             document.getElementById('gauge-monthly-base').style.width = Math.min(100, (d.current.rev / 450000) * 100) + '%';
-            document.getElementById('val-monthly-base').textContent = `$${d.current.rev.toLocaleString()} / $450K`;
+            document.getElementById('val-monthly-base').textContent = `${d.current.rev.toLocaleString()} / $450K`;
             
             document.getElementById('gauge-monthly-stretch').style.width = Math.min(100, (d.current.rev / 2000000) * 100) + '%';
-            document.getElementById('val-monthly-stretch').textContent = `$${d.current.rev.toLocaleString()} / $2.0M`;
+            document.getElementById('val-monthly-stretch').textContent = `${d.current.rev.toLocaleString()} / $2.0M`;
+            
             const prospectList = document.getElementById('prospect-list');
-            prospectList.innerHTML = '';
-            d.sales.prospects.slice(0, 10).forEach(p => {
-                const row = document.createElement('div');
-                row.className = 'prospect-row';
-                row.innerHTML = `<div class="flex-grow"><div class="text-sm font-bold text-white uppercase">${p.name}</div><div class="mono text-[10px] text-gray-500">${p.company}</div></div><div class="flex gap-2"><button class="action-btn">Draft</button><button class="action-btn">Call</button></div>`;
-                prospectList.appendChild(row);
-            });
-            document.getElementById('status-racing').textContent = d.studio.racingStatus;
-            const commitList = document.getElementById('commit-list');
-            commitList.innerHTML = d.studio.commits.map(c => `<div class="border-b border-gray-900 pb-1">> ${c.substring(0, 35)}...</div>`).join('');
-            document.getElementById('cur-monthly-rev').textContent = `$${d.current.rev.toLocaleString()}`;
-            document.getElementById('rev-delta').textContent = `-$${((2000000 - d.current.rev)/1000000).toFixed(2)}M`;
-            document.getElementById('sys-unreplied').textContent = d.comms.unreplied;
-            document.getElementById('sys-uptime').textContent = d.infra.uptime;
+            if (prospectList) {
+                prospectList.innerHTML = '';
+                d.sales.prospects.slice(0, 10).forEach(p => {
+                    const row = document.createElement('div');
+                    row.className = 'prospect-row';
+                    row.innerHTML = `<div class="flex-grow"><div class="text-sm font-bold text-white uppercase">${p.name}</div><div class="mono text-[10px] text-gray-500">${p.company}</div></div><div class="flex gap-2"><button class="action-btn">Draft</button><button class="action-btn">Call</button></div>`;
+                    prospectList.appendChild(row);
+                });
+            }
+            
+            document.getElementById('cur-monthly-rev').textContent = `${d.current.rev.toLocaleString()}`;
+            document.getElementById('rev-delta').textContent = `-${((2000000 - d.current.rev)/1000000).toFixed(2)}M`;
         }
+
+        document.getElementById('cmd-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const val = this.value.trim().toLowerCase();
+                this.value = '';
+                const log = document.getElementById('cmd-log');
+                log.innerHTML = `<div>> ${val}</div>` + log.innerHTML;
+                
+                const parts = val.split(' ');
+                if (parts.length === 2 && !isNaN(parts[1])) {
+                    const num = parseFloat(parts[1]);
+                    if (parts[0] === 'rev' || parts[0] === 'revenue') {
+                        localState.rev = num;
+                        localStorage.setItem('kg_ceo_state', JSON.stringify(localState));
+                        log.innerHTML = `<div class="text-neon-green">> SUCCESS: Monthly Revenue updated to ${num.toLocaleString()}</div>` + log.innerHTML;
+                        updateHUD();
+                    } else if (parts[0] === 'students' || parts[0] === 'velocity') {
+                        localState.velocityToday = num;
+                        localStorage.setItem('kg_ceo_state', JSON.stringify(localState));
+                        log.innerHTML = `<div class="text-neon-green">> SUCCESS: Daily Students updated to ${num.toLocaleString()}</div>` + log.innerHTML;
+                        updateHUD();
+                    } else {
+                        log.innerHTML = `<div class="text-neon-red">> ERROR: Unknown target. Use 'rev [num]' or 'students [num]'</div>` + log.innerHTML;
+                    }
+                } else if (val === 'reset') {
+                    localStorage.removeItem('kg_ceo_state');
+                    localState = {rev: 0, velocityToday: 0};
+                    updateHUD();
+                    log.innerHTML = `<div class="text-neon-yellow">> SYSTEM RESET. Local overrides cleared.</div>` + log.innerHTML;
+                } else {
+                    log.innerHTML = `<div class="text-neon-red">> ERROR: Invalid format. Example: 'rev 50000'</div>` + log.innerHTML;
+                }
+            }
+        });
+
         updateHUD();
         setInterval(updateHUD, 30000);
     </script>
+
 </body>
 </html>
