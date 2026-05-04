@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KG CEO DASHBOARD v5 - THE ROADMAP ENGINE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #22C55E;
+            --neon-red: #ef4444;
+            --neon-blue: #3b82f6;
+            --neon-yellow: #facc15;
+            --dark-bg: #050505;
+            --panel-bg: rgba(10, 10, 10, 0.95);
+            --border-color: #22C55E;
+            --glow: rgba(34, 197, 94, 0.3);
+            --gold: #FBBF24;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 80%),
+                linear-gradient(rgba(34, 197, 94, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 197, 94, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px var(--glow);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .panel::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .header-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--neon-green);
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-shadow: 0 0 5px var(--glow);
+        }
+
+        .velocity-gauge {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            width: 100%;
+            margin-top: 8px;
+            position: relative;
+            border-radius: 3px;
+        }
+
+        .velocity-fill {
+            height: 100%;
+            background: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-green);
+            border-radius: 3px;
+            transition: width 1s ease-in-out;
+        }
+
+        .prospect-row {
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prospect-row:hover { background: rgba(34, 197, 94, 0.05); }
+
+        .timeline-node {
+            width: 12px;
+            height: 12px;
+            background: #222;
+            border-radius: 50%;
+            z-index: 5;
+            position: relative;
+            border: 1px solid #444;
+        }
+
+        .timeline-node.active {
+            background: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-green);
+            border-color: #fff;
+        }
+
+        .action-btn {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 10px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        .metric-title { color: var(--neon-green); font-size: 10px; letter-spacing: 1px; }
+        .metric-val { font-size: 24px; font-weight: 700; color: #fff; }
+        
+        .on-track { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); }
+        .behind { color: var(--neon-red); text-shadow: 0 0 8px var(--neon-red); }
+
+        /* Scanning Overlay */
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+
+    <!-- HUD TOP -->
+    <div class="flex justify-between items-start mb-8">
+        <div>
+            <h1 class="mono text-3xl font-black tracking-tighter text-white flex items-center gap-3">
+                <span class="text-neon-green">ROADMAP</span>_ENGINE <span class="text-xs bg-neon-green text-black px-2 py-0.5 rounded">v5.0</span>
+            </h1>
+            <div class="flex gap-6 mono text-[11px] text-gray-500 mt-2">
+                <span>STATION: <span class="text-white">KG_COMMAND</span></span>
+                <span>STATUS: <span class="text-neon-green">ACTIVE_EXECUTION</span></span>
+                <span id="sync-time" class="text-gold">SYNC: --:--:--</span>
+            </div>
+        </div>
+        <div class="flex gap-10">
+            <div class="text-right">
+                <div class="metric-title">GOAL ARR</div>
+                <div class="text-3xl font-bold text-white">$20.0M</div>
+            </div>
+            <div class="text-right border-l border-gray-800 pl-10">
+                <div class="metric-title">GOAL STUDENTS</div>
+                <div class="text-3xl font-bold text-white">5.0M</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid-layout">
+        
+        <!-- 1. VELOCITY GAUGES -->
+        <div class="panel col-span-3 row-span-4">
+            <div class="header-label"><span>Growth Velocity</span></div>
+            <div class="p-6 space-y-8 h-full">
+                <div>
+                    <div class="flex justify-between text-[11px] mono">
+                        <span class="text-gray-400 uppercase">Daily Students</span>
+                        <span id="val-daily" class="text-white">0 / 1,000</span>
+                    </div>
+                    <div class="velocity-gauge"><div id="gauge-daily" class="velocity-fill" style="width: 0%;"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] mono">
+                        <span class="text-gray-400 uppercase">Weekly Reach</span>
+                        <span id="val-weekly" class="text-white">0 / 7,000</span>
+                    </div>
+                    <div class="velocity-gauge"><div id="gauge-weekly" class="velocity-fill" style="width: 0%;"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] mono">
+                        <span class="text-gray-400 uppercase">Monthly Revenue</span>
+                        <span id="val-monthly" class="text-white">$0 / $2.0M</span>
+                    </div>
+                    <div class="velocity-gauge"><div id="gauge-monthly" class="velocity-fill" style="width: 0%;"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. WAR ROOM: PROSPECTS -->
+        <div class="panel col-span-5 row-span-7">
+            <div class="header-label"><span>War Room: Top 10 Prospects</span></div>
+            <div id="prospect-list" class="overflow-y-auto h-[calc(100%-45px)]">
+                <div class="p-20 text-center mono text-gray-700 animate-pulse">LOADING_DATA_STREAM...</div>
+            </div>
+        </div>
+
+        <!-- 3. STUDIO PULSE -->
+        <div class="panel col-span-4 row-span-4">
+            <div class="header-label"><span>Studio: Development Pulse</span></div>
+            <div class="p-5 h-full">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-black border border-gray-800 p-3">
+                        <div class="metric-title mb-1">RACING V2</div>
+                        <div class="text-sm font-bold uppercase text-white" id="status-racing">Syncing...</div>
+                    </div>
+                    <div class="bg-black border border-gray-800 p-3">
+                        <div class="metric-title mb-1">PORTAL</div>
+                        <div class="text-sm font-bold uppercase text-white" id="status-portal">Stable</div>
+                    </div>
+                </div>
+                <div class="metric-title mb-3">RECENT COMMITS</div>
+                <div id="commit-list" class="space-y-2 mono text-[10px] text-gray-400"></div>
+            </div>
+        </div>
+
+        <!-- 4. ROADMAP TIMELINE -->
+        <div class="panel col-span-7 row-span-3">
+            <div class="header-label">
+                <span>The Road to $20M ARR</span>
+                <span id="roadmap-status" class="on-track">ON TRACK</span>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between items-center px-2 mb-4">
+                    <div class="timeline-node active"></div>
+                    <div class="timeline-node active"></div>
+                    <div class="timeline-node active"></div>
+                    <div class="timeline-node active"></div>
+                    <div class="timeline-node active"></div>
+                    <div class="timeline-node"></div>
+                    <div class="timeline-node"></div>
+                    <div class="timeline-node"></div>
+                    <div class="timeline-node"></div>
+                    <div class="timeline-node"></div>
+                    <div class="timeline-node"></div>
+                    <div class="timeline-node" style="background: var(--gold); border-color: var(--gold);"></div>
+                </div>
+                <div class="flex justify-between mono text-[10px] text-gray-500">
+                    <span>MAY 2026</span>
+                    <span class="text-white uppercase tracking-widest">Phase: Aggressive Scaling</span>
+                    <span>DEC 01 TARGET</span>
+                </div>
+                <div class="mt-8 grid grid-cols-3">
+                    <div class="border-r border-gray-800">
+                        <div class="metric-title">TARGET MONTHLY</div>
+                        <div class="text-2xl font-bold text-white">$2.0M</div>
+                    </div>
+                    <div class="px-10 border-r border-gray-800">
+                        <div class="metric-title">CURRENT EST</div>
+                        <div id="cur-monthly-rev" class="text-2xl font-bold text-white">$1,428</div>
+                    </div>
+                    <div class="pl-10 text-right">
+                        <div class="metric-title">GAP TO GOAL</div>
+                        <div id="rev-delta" class="text-2xl font-bold text-neon-red">-$1.99M</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VITAL SIGNS (Bottom Right) -->
+        <div class="panel col-span-2 row-span-3">
+            <div class="header-label"><span>Vitals</span></div>
+            <div class="p-5 space-y-6">
+                <div>
+                    <div class="metric-title">UNREPLIED</div>
+                    <div id="sys-unreplied" class="text-4xl font-bold text-gold">0</div>
+                </div>
+                <div>
+                    <div class="metric-title">SYSTEM UPTIME</div>
+                    <div id="sys-uptime" class="mono text-xs text-white">--</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel col-span-3 row-span-3">
+            <div class="header-label"><span>Squad Status</span></div>
+            <div class="p-4 space-y-2">
+                <div class="flex justify-between bg-black p-2 border border-gray-900">
+                    <span class="mono text-[11px] text-gray-400 uppercase">Capital Bot</span>
+                    <span class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#22C55E]"></span>
+                </div>
+                <div class="flex justify-between bg-black p-2 border border-gray-900">
+                    <span class="mono text-[11px] text-gray-400 uppercase">Game Bot</span>
+                    <span class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#22C55E]"></span>
+                </div>
+                <div class="flex justify-between bg-black p-2 border border-gray-900">
+                    <span class="mono text-[11px] text-gray-400 uppercase">Tech Bot</span>
+                    <span class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#22C55E]"></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="dashboard-data.js"></script>
+    <script>
+        function updateHUD() {
+            if (typeof KG_DATA === 'undefined') return;
+            const d = KG_DATA;
+            document.getElementById('sync-time').textContent = 'SYNC: ' + new Date(d.lastUpdated).toLocaleTimeString();
+            document.getElementById('gauge-daily').style.width = Math.min(100, (d.current.velocityToday / d.goals.dailyVelocityGoal) * 100) + '%';
+            document.getElementById('val-daily').textContent = `${d.current.velocityToday.toLocaleString()} / 1,000`;
+            document.getElementById('gauge-weekly').style.width = Math.min(100, (d.current.velocityToday * 7 / d.goals.weeklyVelocityGoal) * 100) + '%';
+            document.getElementById('val-weekly').textContent = `${(d.current.velocityToday * 7).toLocaleString()} / 7,000`;
+            document.getElementById('gauge-monthly').style.width = Math.min(100, (d.current.rev / d.goals.monthlyRevGoal) * 100) + '%';
+            document.getElementById('val-monthly').textContent = `$${d.current.rev.toLocaleString()} / $2.0M`;
+            const prospectList = document.getElementById('prospect-list');
+            prospectList.innerHTML = '';
+            d.sales.prospects.slice(0, 10).forEach(p => {
+                const row = document.createElement('div');
+                row.className = 'prospect-row';
+                row.innerHTML = `<div class="flex-grow"><div class="text-sm font-bold text-white uppercase">${p.name}</div><div class="mono text-[10px] text-gray-500">${p.company}</div></div><div class="flex gap-2"><button class="action-btn">Draft</button><button class="action-btn">Call</button></div>`;
+                prospectList.appendChild(row);
+            });
+            document.getElementById('status-racing').textContent = d.studio.racingStatus;
+            const commitList = document.getElementById('commit-list');
+            commitList.innerHTML = d.studio.commits.map(c => `<div class="border-b border-gray-900 pb-1">> ${c.substring(0, 35)}...</div>`).join('');
+            document.getElementById('cur-monthly-rev').textContent = `$${d.current.rev.toLocaleString()}`;
+            document.getElementById('rev-delta').textContent = `-$${((2000000 - d.current.rev)/1000000).toFixed(2)}M`;
+            document.getElementById('sys-unreplied').textContent = d.comms.unreplied;
+            document.getElementById('sys-uptime').textContent = d.infra.uptime;
+        }
+        updateHUD();
+        setInterval(updateHUD, 30000);
+    </script>
+</body>
+</html>
